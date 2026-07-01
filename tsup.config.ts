@@ -6,6 +6,16 @@ export default defineConfig({
   dts: true,
   clean: true,
   treeshake: true,
-  // React is provided by the consuming app, not bundled.
-  external: ["react", "react-dom"],
+  // Runtime deps are installed by the consumer, not bundled into the library.
+  external: [
+    "react",
+    "react-dom",
+    "react/jsx-runtime",
+    "radix-ui",
+    "@radix-ui/react-slot",
+    "lucide-react",
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge",
+  ],
 });

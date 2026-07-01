@@ -4,3 +4,5 @@ dist
 .DS_Store
 .turbo
 coverage
+storybook-static
+tsup.config.bundled_*.mjs
