@@ -1,6 +1,6 @@
 {
   "name": "@hideandseekdigital/ui",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared, CMS-agnostic React component library for Hide & Seek — built on shadcn/ui.",
   "license": "UNLICENSED",
   "type": "module",
