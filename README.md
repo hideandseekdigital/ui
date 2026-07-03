@@ -111,35 +111,61 @@ pnpm publish --no-git-checks
 
 ## Consuming in a project
 
-**1. Add an `.npmrc`** to the consuming repo so the scope resolves to GitHub Packages:
+This is a **private GitHub Packages** package: authenticate, install, wire Tailwind v4.
+(Verified against a Next.js 15 app.)
+
+### 1. Authenticate (one-time)
+
+Create a GitHub **Personal Access Token (classic)** with the **`read:packages`** scope,
+then either export it for the install:
+
+```bash
+export NODE_AUTH_TOKEN=<your-PAT>
+```
+
+or add the token to your **user** `~/.npmrc` to keep it out of the project.
+
+> A token is required **even though the repo is public** — GitHub Packages npm does not
+> allow anonymous installs.
+
+### 2. Add an `.npmrc` to the project root
 
 ```
 @hideandseekdigital:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-(Set `NODE_AUTH_TOKEN` to a GitHub PAT with `read:packages` locally; in CI use the
-built-in token.)
-
-**2. Install:**
+### 3. Install
 
 ```bash
-pnpm add @hideandseekdigital/ui
+npm install @hideandseekdigital/ui      # or: pnpm add @hideandseekdigital/ui
 ```
 
-**3. Wire Tailwind v4** in your app's CSS entry — import Tailwind and our tokens, let
-Tailwind scan the package's compiled classes, and map the tokens to utilities:
+Its runtime deps (`radix-ui`, `lucide-react`, …) install automatically. React 18+ must
+already be present.
+
+### 4. Set up Tailwind v4 (if the project doesn't have it)
+
+```bash
+npm install -D tailwindcss @tailwindcss/postcss
+```
+
+`postcss.config.mjs`:
+
+```js
+export default { plugins: { "@tailwindcss/postcss": {} } };
+```
+
+### 5. Wire the tokens in your CSS entry
 
 ```css
 @import "tailwindcss";
 @import "@hideandseekdigital/ui/styles/tokens.css";
-
 @custom-variant dark (&:is(.dark *));
 
-/* Scan the library's built output so its classes aren't purged */
+/* Scan the library's compiled classes so they aren't purged */
 @source "../node_modules/@hideandseekdigital/ui/dist";
 
-/* Map tokens to utilities — mirror src/styles/globals.css from the library */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -156,26 +182,38 @@ Tailwind scan the package's compiled classes, and map the tokens to utilities:
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  /* + card, popover, chart-*, sidebar-* — see globals.css */
+  /* + card, popover, chart-*, sidebar-* — see src/styles/globals.css */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+@layer base {
+  * { border-color: var(--border); outline-color: var(--ring); }
+  body { background-color: var(--background); color: var(--foreground); }
 }
 ```
 
-**4. Use components:**
+Import that CSS once at your app root (e.g. `app/layout.tsx` in Next.js).
+
+### 6. Use components
 
 ```tsx
-import { Button } from "@hideandseekdigital/ui";
+import { Button, Card } from "@hideandseekdigital/ui";
 
 export default function Page() {
-  return <Button variant="default">Hello</Button>;
+  return <Button>Hello</Button>;
 }
 ```
 
-**5. Apply this project's brand** by overriding the token values in your own CSS, after
-the defaults:
+### 7. Apply this project's brand (optional)
+
+Override the token values in your own CSS **after** importing the defaults — every
+component restyles automatically, no component changes:
 
 ```css
 :root {
-  --primary: 262 83% 58%; /* this client's brand */
+  --primary: oklch(0.55 0.22 285); /* this client's brand */
   --radius: 0.75rem;
 }
 ```
